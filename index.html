@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MDCAT Test</title>
+<style>
+  /* Basic Styling */
+  body { font-family: sans-serif; }
+  #banner {
+    border: 2px solid transparent;
+    background-image: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    animation: glowing-border 5s linear infinite;
+    padding: 20px;
+    text-align: center; /* Center the text */
+  }
+  @keyframes glowing-border {
+    0% { border-color: transparent; }
+    50% { border-color: white; }
+    100% { border-color: transparent; }
+  }
+  .question { margin-bottom: 20px; }
+  .option { cursor: pointer; } /* Make options look clickable */
+  .correct { color: green; }
+  .incorrect { color: red; }
+  #leaderboard { margin-top: 20px; border-collapse: collapse; width: 100%; }
+  #leaderboard th, #leaderboard td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+</style>
+</head>
+<body>
+
+<div id="login-container">
+  <h2>Enter Security Code</h2>
+  <input type="password" id="security-code">
+  <button onclick="checkSecurityCode()">Enter</button>
+  <div id="error-message"></div>
+</div>
+
+<div id="test-container" style="display:none;">
+  <div id="banner"><h1>OWNERS AHMED & ZOHAIB</h1></div>
+  <form id="test-form"> </form>
+  <button onclick="submitTest()">Submit Test</button>
+  <div id="result"></div>
+</div>
+
+<div id="leaderboard-container" style="display:none;">
+    <h2>Leaderboard</h2>
+    <table id="leaderboard">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+let username = ""; // Store the username
+const securityCode = "23082004z";
+const loginContainer = document.getElementById("login-container");
+const testContainer = document.getElementById("test-container");
+const leaderboardContainer = document.getElementById("leaderboard-container");
+const errorMsg = document.getElementById("error-message");
+const testForm = document.getElementById("test-form");
+const resultDiv = document.getElementById("result");
+const leaderboardTable = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
+
+function checkSecurityCode() {
+    const enteredCode = document.getElementById("security-code").value;
+    if (enteredCode === securityCode) {
+        loginContainer.style.display = "none";
+
+        // Prompt for username (simple prompt, not ideal)
+        username = prompt("Please enter your username:");
+        if (username) { // Only proceed if username is entered
+            testContainer.style.display = "block";
+            generateMCQs();
+        } else {
+            errorMsg.textContent = "Username is required.";
+            loginContainer.style.display = "block"; // Show login again
+        }
+
+    } else {
+        errorMsg.textContent = "Incorrect code.";
+    }
+}
+
+
+function generateMCQs() {
+  const questions = [
+    // ... your 50 MDCAT-style questions here (question text, options, correct answer) ...
+    // Example:
+    {
+      question: "What is the capital of France?",
+      options: ["Berlin", "Paris", "Madrid", "Rome"],
+      correctAnswer: "Paris"
+    },
+    // ... more questions ...
+  ];
+
+  questions.forEach((q, i) => {
+    const questionDiv = document.createElement("div");
+    questionDiv.className = "question";
+    questionDiv.innerHTML = `<h3>${i + 1}. ${q.question}</h3>`;
+
+    q.options.forEach(option => {
+      const optionDiv = document.createElement("div");
+      optionDiv.className = "option";
+      optionDiv.textContent = option;
+      optionDiv.dataset.questionIndex = i; // Store question index
+      optionDiv.dataset.option = option;       // Store chosen option
+
+      optionDiv.addEventListener("click", () => {
+        if (!optionDiv.classList.contains("selected")) {  // Only allow one selection
+          const optionsForQuestion = questionDiv.querySelectorAll(".option");
+          optionsForQuestion.forEach(opt => opt.classList.remove("selected")); // Unselect others
+          optionDiv.classList.add("selected");
+        }
+      });
+
+      questionDiv.appendChild(optionDiv);
+    });
+
+    testForm.appendChild(questionDiv);
+  });
+}
+
+function submitTest() {
+    let score = 0;
+    const questions =  [
+        {
+          question: "What is the capital of France?",
+          options: ["Berlin", "Paris", "Madrid", "Rome"],
+          correctAnswer: "Paris"
+        },
+        // ... more questions ...
+      ];
+    questions.forEach((q, i) => {
+        const selectedOption = document.querySelector(`.question:nth-child(${i+1}) .option.selected`);
+        const optionsForQuestion = document.querySelectorAll(`.question:nth-child(${i+1}) .option`);
+
+        optionsForQuestion.forEach(optionDiv => {
+          if (optionDiv.textContent === q.correctAnswer) {
+            optionDiv.classList.add("correct");
+          } else if (selectedOption && selectedOption.textContent === optionDiv.textContent) {
+            optionDiv.classList.add("incorrect");
+          }
+        });
+
+      if (selectedOption && selectedOption.textContent === q.correctAnswer) {
+        score++;
+      }
+    });
+
+
+    resultDiv.textContent = `Your score: ${score} out of ${questions.length}`;
+
+    // Basic Leaderboard (Client-Side - Not Persistent)
+    updateLeaderboard(username, score);
+
+    testContainer.style.display = "none";
+    leaderboardContainer.style.display = "block";
+}
+
+
+function updateLeaderboard(username, score) {
+  const newRow = leaderboardTable.insertRow();
+  const usernameCell = newRow.insertCell();
+  const scoreCell = newRow.insertCell();
+
+  usernameCell.textContent = username;
+  scoreCell.textContent = score;
+
+  // Simple sorting (client-side, not persistent)
+  const rows = Array.from(leaderboardTable.rows).slice(1); // Skip header
+  rows.sort((a, b) => parseInt(b.cells[1].textContent) - parseInt(a.cells[1].textContent)); // Sort by score (descending)
+
+  leaderboardTable.innerHTML = ""; // Clear table
+  leaderboardTable.insertRow().innerHTML = "<tr><th>Username</th><th>Score</th></tr>"; //Re-add header
+
+  rows.forEach(row => leaderboardTable.appendChild(row)); // Re-add rows in sorted order
+}
+
+
+
+</script>
+
+</body>
+</html>
